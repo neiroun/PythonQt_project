@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'clickrecorder.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.0
-#
+# Form implementation generated from reading ui file 'rec.ui'
+# Made by: PyQt5 UI code generator 5.13.0
 # WARNING! All changes made in this file will be lost!
 
 
@@ -14,9 +12,9 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(420, 250)
-        MainWindow.setMinimumSize(QtCore.QSize(420, 250))
-        MainWindow.setMaximumSize(QtCore.QSize(420, 250))
+        MainWindow.resize(450, 290)
+        # MainWindow.setMinimumSize(QtCore.QSize(420, 250))
+        # MainWindow.setMaximumSize(QtCore.QSize(420, 250))
         MainWindow.setStyleSheet(".QMainWindow{\n"
         "background-color: #87CEEB;\n"
         "}\n"
