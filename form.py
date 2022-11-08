@@ -16,12 +16,12 @@ class Ui_MainWindow(object):
         # MainWindow.setMinimumSize(QtCore.QSize(420, 250))
         # MainWindow.setMaximumSize(QtCore.QSize(420, 250))
         MainWindow.setStyleSheet(".QMainWindow{\n"
-        "background-color: #87CEEB;\n"
+        "background-color: #000000;\n"
         "}\n"
         "\n"
         "\n"
         ".QPushButton{\n"
-        "background-color: #FFF;\n"
+        "background-color: #FFFFFF;\n"
         "border: 1px solid #7A7A7A;\n"
         "border-radius: 2px;\n"
         "}\n"

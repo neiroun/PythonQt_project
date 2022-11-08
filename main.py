@@ -447,7 +447,9 @@ class Main(QMainWindow):
         self.load_other_images()
         self.load_record_button()
 
-app = QApplication([])
-application = Main()
-application.show()
-sys.exit(app.exec())
+
+if __name__ == '__main__':
+    app = QApplication([])
+    application = Main()
+    application.show()
+    sys.exit(app.exec())
