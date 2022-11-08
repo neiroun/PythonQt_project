@@ -1,112 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
+from main_defs import *
 from main_import import *
-
-
-def toFixed(numberObj, digits=0):
-    return f"{numberObj:.{digits}f}"
-
-
-class Subscriber:
-    def __init__(self):
-        self.logg, self.StartTime = [], 0
-        self.mouseListener = mouse.Listener(on_move=self.OnMove, on_click=self.onclick, on_scroll=self.OnScroll)
-        self.keyListener = ''
-        self.IsStarted = False
-        self.mouseOn, self.keyboardOn = True, True
-
-    def start(self, mouseOn, keyboardOn):
-        if not self.IsStarted:
-            self.mouseOn, self.keyboardOn = mouseOn, keyboardOn
-            self.clear_log()
-            self.StartTime = time()
-            if self.mouseOn:
-                self.mouseListener.start()
-            if self.keyboardOn:
-                self.keyListener = hook(self.WriteKeyboard)
-            self.IsStarted = True
-
-    def set_log(self, new_log):
-        self.logg = new_log
-
-    def stop(self):
-        if self.IsStarted:
-            if self.mouseOn:
-                self.mouseListener.stop()
-                self.mouseListener = mouse.Listener(on_move=self.OnMove, on_click=self.onclick, on_scroll=self.OnScroll)
-            if self.keyboardOn:
-                unhook(self.keyListener)
-            self.IsStarted = False
-            self.keyListener = ''
-
-    def get_log(self):
-        return self.logg
-
-    def clear_log(self):
-        self.logg = []
-
-    def WriteKeyboard(self, a):
-        self.logg.append(f'{time() - self.StartTime} keyboard {str(a)[str(a).find("(") + 1:str(a).find(")")]}')
-
-    def OnMove(self, x, y):
-        self.logg.append(f'{time() - self.StartTime} mouseOnMove {x} {y}')
-
-    def onclick(self, x, y, button, pressed):
-        self.logg.append(f'{time() - self.StartTime} mouseOnClick {x} {y} {button} {pressed}')
-
-    def OnScroll(self, x, y, dx, dy):
-        self.logg.append(f'{time() - self.StartTime} mouseOnScroll {x} {y} {dx} {dy}')
-
-standart_hotkey_list = ["f9", "f10", "f11"]
-
-def check_data_folder():
-    if not os.path.exists('data'):
-        os.mkdir('data')
-    os.chdir('data')
-
-def file_clear_button_values():
-    global standart_hotkey_list
-    with open('buttons.dt', 'w') as ouf:
-        text = ''
-        for hotkey in standart_hotkey_list:
-            text += f'{hotkey}\n'
-        ouf.write(text[:-1])
-
-def file_read_button_values():
-    global standart_hotkey_list
-    if os.path.exists('buttons.dt'):
-        lines, correct_list = [], []
-        with open('buttons.dt') as inf:
-            for line in inf:
-                lines.append(line)
-        if len(lines) < 3:
-            file_clear_button_values()
-            return standart_hotkey_list
-        for x in range(len(lines)):
-            try:
-                a = add_hotkey(lines[x].strip(), lambda: 2)
-            except:
-                correct_list.append(standart_hotkey_list[x])
-            else:
-                correct_list.append(lines[x])
-                remove_hotkey(a)
-        file_save_button_values(correct_list)
-        return list(map(str.strip, correct_list))
-    else:
-        file_clear_button_values()
-        return list(map(str.strip, standart_hotkey_list))
-
-def file_save_button_values(values):
-    if os.path.exists('buttons.dt'):
-        text = ''
-        for item in values:
-            text += f'{item.strip()}\n'
-        with open('buttons.dt', 'w') as ouf:
-            ouf.write(text[:-1])
-    else:
-        file_clear_button_values()
-        file_save_button_values(values)
 
 
 class Main(QMainWindow):
@@ -133,22 +28,22 @@ class Main(QMainWindow):
         for x in range(len(value_list)):
             if not value_list[x]:
                 value_list[x] = standart_hotkey_list[x]
-        file_save_button_values(value_list)
+        save_values_of_buttons(value_list)
         self.load_hotkey_button_values()
 
-    def hotkey_button_reader(self, button):
+    def hotkey_button_read(self, button):
         hotkey = read_hotkey(suppress=False)
-        if not hotkey in file_read_button_values():
+        if not hotkey in read_values_of_button():
             if self.hotkey_button_is_selected(button):
                 button.setText(hotkey)
         self.hotkey_button_remove_selected(button)
 
-    def hotkey_on_key_click(self, button):
+    def hotkey_onkey_click(self, button):
         if self.hotkey_button_is_selected(button):
             self.hotkey_button_remove_selected(button)
             button.setText('')
         else:
-            threading.Thread(target=self.hotkey_button_reader, args=(button,)).start()
+            threading.Thread(target=self.hotkey_button_read, args=(button,)).start()
             self.hotkey_button_make_selected(button)
 
     def hotkey_button_is_selected(self, button):
@@ -173,7 +68,7 @@ class Main(QMainWindow):
         return False
 
     def load_hotkey_button_values(self):
-        values = file_read_button_values()
+        values = read_values_of_button()
         for x in range(len(values)):
             self.button_list[x].setText(values[x])
         self.scene_hotkey_activate(values)
@@ -204,7 +99,7 @@ class Main(QMainWindow):
         self.load_record_button()
         if self.scene_recording:
             self.listener.clear_log()
-            threading.Thread(target=self.listener.start, args=(self.spec_values[0], self.spec_values[1])).start()
+            threading.Thread(target=self.listener.run, args=(self.spec_values[0], self.spec_values[1])).start()
         else:
             self.scene_stop_process()
 
@@ -362,7 +257,7 @@ class Main(QMainWindow):
 
     def load_items(self):
         self.ui.lineEdit.setPlaceholderText('Название сценария')
-        check_data_folder()
+        check_folder_of_data()
         self.load_hotkey_button_values()
         self.load_images()
         self.listView_load_items()
@@ -390,7 +285,7 @@ class Main(QMainWindow):
     def button_click_handler(self):
         button = self.sender()
         if button in self.button_list[:3]:
-            self.hotkey_on_key_click(button)
+            self.hotkey_onkey_click(button)
         else:
             threading.Thread(target=self.button_animation_thread, args=(button,)).start()
 
@@ -429,7 +324,6 @@ class Main(QMainWindow):
             self.ui.startRecordButton.setIcon(icon)
 
     def load_other_images(self):
-
         try:
             os.chdir('../img')
             github_pixmap = QtGui.QPixmap('github.png')

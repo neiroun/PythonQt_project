@@ -9,3 +9,5 @@ from keyboard import read_hotkey, add_hotkey, remove_all_hotkeys, hook, unhook, 
 import os
 import re
 import webbrowser
+from Subscriber import Subscriber
+from const import standart_hotkey_list

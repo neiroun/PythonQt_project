@@ -13,8 +13,8 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(450, 290)
-        # MainWindow.setMinimumSize(QtCore.QSize(420, 250))
-        # MainWindow.setMaximumSize(QtCore.QSize(420, 250))
+        MainWindow.setMinimumSize(QtCore.QSize(420, 250))
+        MainWindow.setMaximumSize(QtCore.QSize(420, 250))
         MainWindow.setStyleSheet(".QMainWindow{\n"
         "background-color: #000000;\n"
         "}\n"
@@ -446,8 +446,5 @@ class Ui_MainWindow(object):
         self.deleteButton.setText(_translate("MainWindow", "Удалить"))
         self.selectButton.setText(_translate("MainWindow", "Выбрать"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.page2), _translate("MainWindow", "Записи"))
-        self.label_11.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:10pt; font-weight:600;\">ClickRecorder</span><span style=\" font-size:10pt;\"> - простая программа для записи сценариев</span></p></body></html>"))
-        self.label_12.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:10pt;\">событий как мыши, так и клавиатуры, написанная на python</span></p></body></html>"))
-        self.label_13.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:10pt;\">AxeCameron</span></p></body></html>"))
         self.githubLink.setText(_translate("MainWindow", "Github neiroun"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.page3), _translate("MainWindow", "Информация"))

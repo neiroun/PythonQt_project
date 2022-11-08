@@ -1,0 +1,1 @@
+standart_hotkey_list = ["1", "2", "f11"]
