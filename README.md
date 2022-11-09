@@ -1,1 +1,1 @@
-# Brief description: The purpose of this project is to create an application for recording actions performed with the mouse in order to reproduce them further
+# Short description: The essence of the project is to create a working version of the application to capture the actions performed with the mouse or keyboard.
