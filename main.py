@@ -163,7 +163,7 @@ class Main(QMainWindow):
 
     def scene_time(self, name, from_file=True):
         if from_file:
-            with open(f'{name}.ckr') as inf:
+            with open(f'{name}.rec') as inf:
                 mlist = inf.read()
                 if mlist:
                     a = re.findall(r'(\d+\.\d+)', str(mlist).strip('[]'))
@@ -182,13 +182,13 @@ class Main(QMainWindow):
     def save_scene_to_file(self):
         name, log = self.ui.lineEdit.text(), self.listener.get_log()
         if name and log:
-            dir_name, text = f'{name}.ckr', ''
+            dir_name, text = f'{name}.rec', ''
             if os.path.exists(dir_name):
                 index = 2
-                dir_name = f'{name}({index}).ckr'
+                dir_name = f'{name}({index}).rec'
                 while os.path.exists(dir_name):
                     index += 1
-                    dir_name = f'{name}({index}).ckr'
+                    dir_name = f'{name}({index}).rec'
             for line in log:
                 text += f'{line}\n'
             with open(dir_name, 'w') as ouf:
@@ -201,9 +201,9 @@ class Main(QMainWindow):
                 threading.Thread(target=self.animate_lineEdit_log).start()
 
     def read_scene_file(self, name):
-        if os.path.exists(f'{name}.ckr'):
+        if os.path.exists(f'{name}.rec'):
             returned_list = []
-            with open(f'{name}.ckr') as inf:
+            with open(f'{name}.rec') as inf:
                 for line in inf:
                     returned_list.append(line.strip())
             return returned_list
@@ -215,7 +215,7 @@ class Main(QMainWindow):
         self.ui.listView.setModel(model)
         for item in os.listdir():
             ras = os.path.splitext(item)[1]
-            if ras == '.ckr':
+            if ras == '.rec':
                 item = QtGui.QStandardItem(item)
                 item.setEditable(False)
                 model.appendRow(item)
