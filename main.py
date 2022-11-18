@@ -3,317 +3,440 @@
 from main_defs import *
 from main_import import *
 
+# This file represents the main class of this program. It serves to execute the program code and all its main functions.
+
 
 class Main(QMainWindow):
+    """
+The execution of all the main functions of the program are enclosed in this class.
+That is, it means recording, saving and playing back all records made using this program,
+as well as creating your own extension
+    """
+# The __init__ function is used to initialize all the necessary variables, as well as to load the form
     def __init__(self):
-        super(Main, self).__init__()
-        self.ui = Ui_MainWindow()
+        super().__init__()
+        self.ui = MainForm()
         self.ui.setupUi(self)
-        self.listener, self.selected_item, self.scene_playing, self.scene_recording, self.speed = Subscriber(), '', \
-                                                                                                  False, False, 1.0
-        self.spec_values = [True, True, True]
+        self.subscriber, self.on_selected_item, self.playing_scene, self.recording_scene, self.speed = Subscriber(), '', \
+                                                                                                       False, False, 1.0
+        self.values_for_spec = [True, True, True]
         self.ui.doubleSpinBox.setValue(self.speed)
-        self.button_list = [self.ui.hotkeyReader1, self.ui.hotkeyReader2, self.ui.hotkeyReader3,
-                            self.ui.startRecordButton, self.ui.playButton, self.ui.saveButton, self.ui.addButton,
-                            self.ui.deleteButton, self.ui.selectButton, self.ui.mouseButton, self.ui.repeatButton,
-                            self.ui.keyboardButton]
-        for button in self.button_list:
-            button.clicked.connect(self.button_click_handler)
+        self.buttons = [self.ui.hotkeyReader1, self.ui.hotkeyReader2, self.ui.hotkeyReader3,
+                        self.ui.button_for_start_record, self.ui.button_for_play, self.ui.button_to_save, self.ui.add_button,
+                        self.ui.button_for_delete, self.ui.button_for_select, self.ui.button_for_mouse, self.ui.button_for_repeeat,
+                        self.ui.button_for_keyboard]
+        for item in self.buttons:
+            item.clicked.connect(self.button_click_handler)
         self.load_items()
         self.load_signals()
 
-    def save_hotkeys(self):
-        global standart_hotkey_list
-        value_list = [self.button_list[x].text() for x in range(3)]
-        for x in range(len(value_list)):
-            if not value_list[x]:
-                value_list[x] = standart_hotkey_list[x]
-        save_values_of_buttons(value_list)
-        self.load_hotkey_button_values()
+####################################################################################################################
+    # hotkey buttons function
+####################################################################################################################
 
-    def hotkey_button_read(self, button):
-        hotkey = read_hotkey(suppress=False)
-        if not hotkey in read_values_of_button():
-            if self.hotkey_button_is_selected(button):
-                button.setText(hotkey)
-        self.hotkey_button_remove_selected(button)
+    def save(self):
+        """
+        This function provides the ability to change and save new hotkeys
+        :return:
+        """
+        list_of_values = [self.buttons[x].text() for x in range(3)]
+        for i in range(len(list_of_values)):
+            if not list_of_values[i]:
+                list_of_values[i] = standart_hotkey_list[i]
+        save_button_value(list_of_values)
+        """
+        self.load_hotkey_button_values():  
+        Saving hotkeys for future use, as well as for substituting them as default when restarting the program
+        """
+        self.load_values()
 
-    def hotkey_onkey_click(self, button):
-        if self.hotkey_button_is_selected(button):
-            self.hotkey_button_remove_selected(button)
+    def read(self, button):
+        """
+        A function to read a new hot key for selected button
+        :param button:
+        :return:
+        """
+        key = read_hotkey(suppress=False)
+        if not key in read_button_value():
+            if self.is_selected(button):
+                button.setText(key)
+        self.remove_selected(button)  # Removes the pattern of the selected button from the button
+
+    def click(self, button):
+        """
+        A function that processes a keystroke and sets a new hotkey
+        :param button:
+        :return:
+        """
+        if self.is_selected(button):
+            self.remove_selected(button)
             button.setText('')
         else:
-            threading.Thread(target=self.hotkey_button_read, args=(button,)).start()
-            self.hotkey_button_make_selected(button)
+            threading.Thread(target=self.read, args=(button,)).start()
+            self.make_selected_pattern(button)
 
-    def hotkey_button_is_selected(self, button):
+    @staticmethod
+    def is_selected(button):
+        """
+        A function used to determine if a new hotkey has been set. If it returns "background-color: #E0E0E0;"
+        then we understand that hotkey editing is completed
+        :param button:
+        :return:
+        """
         return button.styleSheet()
 
-    def hotkey_button_make_selected(self, button):
-        if self.hotkey_button_is_any_selected():
-            self.hotkey_button_remove_all_selected()
-        button.setStyleSheet('background-color: #E0E0E0;')
-
-    def hotkey_button_remove_selected(self, button):
+    @staticmethod
+    def remove_selected(button):
+        """
+        Function used to remove selected pattern from button (.QPushButton)
+        :param button:
+        :return:
+        """
         button.setStyleSheet('')
 
-    def hotkey_button_remove_all_selected(self):
-        for button in self.button_list:
-            self.hotkey_button_remove_selected(button)
+    def make_selected_pattern(self, button):
+        """
+        Function to mark a button as selected when it is pressed
+        :param button:
+        :return:
+        """
+        if self.if_any_selected():
+            self.remove_all_selected()
+        button.setStyleSheet('background-color: #E0E0E0;')
 
-    def hotkey_button_is_any_selected(self):
-        for button in self.button_list:
-            if self.hotkey_button_is_selected(button):
-                return button
+    def remove_all_selected(self):
+        """
+        The function removes the pattern of the selected element from all buttons
+        :return:
+        """
+        for item in self.buttons:
+            self.remove_selected(item)
+
+    def if_any_selected(self):
+        """
+        The function checks which of the keys have the pattern of the selected
+        :return:
+        """
+        for item in self.buttons:
+            if self.is_selected(item):
+                return item
         return False
 
-    def load_hotkey_button_values(self):
-        values = read_values_of_button()
+    def load_values(self):
+        """
+        Function loads hotkey values
+        :return:
+        """
+        values = read_button_value()
         for x in range(len(values)):
-            self.button_list[x].setText(values[x])
-        self.scene_hotkey_activate(values)
+            self.buttons[x].setText(values[x])
+        self.activate_a_hotkey(values)
 
-    def scene_hotkey_activate(self, hotkeys):
-        remove_all_hotkeys()
-        add_hotkey(hotkeys[0], self.scene_start), add_hotkey(hotkeys[1], self.scene_stop), add_hotkey(hotkeys[2],
-                                                                                                      self.scene_play)
-
-    def scene_stop(self):
-        if self.scene_playing:
+####################################################################################################################
+    # scene hotkey functions
+####################################################################################################################
+    def stop(self):
+        """
+        This function serves to stop the recording process
+        :return:
+        """
+        if self.playing_scene:
             return
-        if self.scene_recording:
-            self.scene_stop_process()
-        self.scene_recording = False
-        self.load_record_button()
+        if self.recording_scene:
+            self.stop_process()
+        self.recording_scene = False
+        self.record_button_load()
 
-    def scene_stop_process(self):
-        threading.Thread(target=self.listener.stop).start()
-        self.ui.nameLabel.setText('NO')
-        self.ui.weightLabel.setText('NO')
-        self.ui.timeLabel.setText(f'{toFixed(self.scene_time("", from_file=False), 3)} s')
-
-    def scene_start(self):
-        if self.scene_playing:
+    def start(self):
+        """
+        This function serves to stop the recording process
+        :return:
+        """
+        if self.playing_scene:
             return
-        self.scene_recording = not self.scene_recording
-        self.load_record_button()
-        if self.scene_recording:
-            self.listener.clear_log()
-            threading.Thread(target=self.listener.run, args=(self.spec_values[0], self.spec_values[1])).start()
+        self.recording_scene = not self.recording_scene
+        self.record_button_load()
+        if self.recording_scene:
+            self.subscriber.clear_log()
+            threading.Thread(target=self.subscriber.run, args=(self.values_for_spec[0], self.values_for_spec[1])).start()
         else:
-            self.scene_stop_process()
+            self.stop_process()
 
-    def scene_playing_thread(self, log):
-        mcontrol = mouse.Controller()
-        while self.scene_playing:
-            this_time = 0
-            for line in log:
-                if not self.scene_playing:
+    def play(self):
+        """
+        This function is used to play back a recording
+        :return:
+        """
+        if self.recording_scene:
+            return
+        self.playing_scene = not self.playing_scene
+        self.load_play_button()
+        if self.playing_scene:
+            self.speed = self.ui.doubleSpinBox.value()
+            log = self.subscriber.get_log()
+            if log:
+                threading.Thread(target=self.playing_thread, args=(log,)).start()
+        else:
+            self.playing_scene = False
+
+    def activate_a_hotkey(self, hotkeys):
+        """
+        A function to activate hotkeys for a given scene.
+        The add_hotkey method is imported from the keyboard library and is used to create hotkeys
+        and set their functions.
+        :param hotkeys:
+        :return:
+        """
+        remove_all_hotkeys()
+        add_hotkey(hotkeys[0], self.start)
+        add_hotkey(hotkeys[1], self.stop)
+        add_hotkey(hotkeys[2], self.play)
+
+    def stop_process(self):
+        """
+        This function is triggered when the recording of a scene is stopped, setting the file name,
+        as well as its weight and duration.
+        :return:
+        """
+        threading.Thread(target=self.subscriber.stop).start()
+        self.ui.file_name.setText('NO')
+        self.ui.file_weight.setText('NO')
+        self.ui.file_runtime.setText(f'{to_fixed_value(self.time("", from_file=False), 3)} s')
+
+    def playing_thread(self, log):
+        """
+        The function is used to play back a recorded scene. The following is an algorithm for this.
+        :param log:
+        :return:
+        """
+        control = mouse.Controller()
+        while self.playing_scene:
+            log_of_time = 0
+            for item in log:
+                if not self.playing_scene:
                     return
-                mlist = line.split()
-                sleep((float(mlist[0])-this_time)/self.speed)
-                this_time = float(mlist[0])
+                mouse_list = item.split()
+                sleep((float(mouse_list[0])-log_of_time)/self.speed)
+                log_of_time = float(mouse_list[0])
                 try:
-                    if mlist[1] == 'mouseOnMove':
-                        mcontrol.position = (int(mlist[2]), int(mlist[3]))
-                    elif mlist[1] == 'mouseOnClick':
-                        mcontrol.position = (int(mlist[2]), int(mlist[3]))
-                        button = ''
-                        if mlist[4] == 'Button.left':
-                            button = mouse.Button.left
-                        elif mlist[4] == 'Button.right':
-                            button = mouse.Button.right
-                        elif mlist[4] == 'Button.middle':
-                            button = mouse.Button.middle
-                        if mlist[5] == 'True':
-                            mcontrol.press(button)
-                        elif mlist[5] == 'False':
-                            mcontrol.release(button)
+                    if mouse_list[1] == 'mouseOnMove':
+                        control.position = (int(mouse_list[2]), int(mouse_list[3]))
+                    elif mouse_list[1] == 'mouseOnClick':
+                        control.position = (int(mouse_list[2]), int(mouse_list[3]))
+                        btn = ''
+                        if mouse_list[4] == 'Button.left':
+                            btn = mouse.Button.left
+                        elif mouse_list[4] == 'Button.right':
+                            btn = mouse.Button.right
+                        elif mouse_list[4] == 'Button.middle':
+                            btn = mouse.Button.middle
+                        if mouse_list[5] == 'True':
+                            control.press(btn)
+                        elif mouse_list[5] == 'False':
+                            control.release(btn)
                         else:
                             raise ValueError
-                    elif mlist[1] == 'mouseOnScroll':
-                        mouse.position = (int(mlist[2]), int(mlist[3]))
-                        mouse.scroll(int(mlist[4]), int(mlist[5]))
-                    elif mlist[1] == 'keyboard':
-                        if mlist[3] == 'up':
-                            press(mlist[2])
-                        elif mlist[3] == 'down':
-                            release(mlist[2])
+                    elif mouse_list[1] == 'mouseOnScroll':
+                        mouse.position = (int(mouse_list[2]), int(mouse_list[3]))
+                        mouse.scroll(int(mouse_list[4]), int(mouse_list[5]))
+                    elif mouse_list[1] == 'keyboard':
+                        if mouse_list[3] == 'up':
+                            press(mouse_list[2])
+                        elif mouse_list[3] == 'down':
+                            release(mouse_list[2])
                     else:
                         raise ValueError
                 except:
                     pass
-            if not self.spec_values[2]:
+            if not self.values_for_spec[2]:
                 break
-        self.scene_playing = False
+        self.playing_scene = False
         self.load_play_button()
 
-    def scene_play(self):
-        if self.scene_recording:
-            return
-        self.scene_playing = not self.scene_playing
-        self.load_play_button()
-        if self.scene_playing:
-            self.speed = self.ui.doubleSpinBox.value()
-            log = self.listener.get_log()
-            if log:
-                threading.Thread(target=self.scene_playing_thread, args=(log,)).start()
-        else:
-            self.scene_playing = False
-
-    def scene_time(self, name, from_file=True):
+    def time(self, name, from_file=True):
+        """
+        In this function, the execution time of the scene is calculated, for its further use.
+        :param name:
+        :param from_file:
+        :return:
+        """
         if from_file:
-            with open(f'{name}.rec') as inf:
-                mlist = inf.read()
-                if mlist:
-                    a = re.findall(r'(\d+\.\d+)', str(mlist).strip('[]'))
-                    if a:
-                        return float(a[-1])
+            with open(f'{name}.rec', 'r') as inf:
+                mouse_list = inf.read()
+                if mouse_list:
+                    item = re.findall(r'(\d+\.\d+)', str(mouse_list).strip('[]'))
+                    if item:
+                        return float(item[-1])
                     else:
                         return 0
                 else:
                     return 0
         else:
-            if self.listener.get_log():
-                return float(self.listener.get_log()[-1].split()[0])
+            if self.subscriber.get_log():
+                return float(self.subscriber.get_log()[-1].split()[0])
             else:
                 return 0
 
-    def save_scene_to_file(self):
-        name, log = self.ui.lineEdit.text(), self.listener.get_log()
-        if name and log:
-            dir_name, text = f'{name}.rec', ''
-            if os.path.exists(dir_name):
+    def save_to_file(self):
+        """
+        Function to save the recorded scene to a file with .rec extension
+        :return:
+        """
+        name = self.ui.lineEdit.text()
+        movement = self.subscriber.get_log()
+        if name and movement:
+            directory_name, text = f'{name}.rec', ''
+            if os.path.exists(directory_name):
                 index = 2
-                dir_name = f'{name}({index}).rec'
-                while os.path.exists(dir_name):
+                directory_name = f'{name}({index}).rec'
+                while os.path.exists(directory_name):
                     index += 1
-                    dir_name = f'{name}({index}).rec'
-            for line in log:
-                text += f'{line}\n'
-            with open(dir_name, 'w') as ouf:
+                    directory_name = f'{name}({index}).rec'
+            for item in movement:
+                text += f'{item}\n'
+            with open(directory_name, 'w') as ouf:
                 ouf.write(text[:-1])
-            self.listView_load_items()
+            self.view_load_items()
         else:
             if not name:
-                threading.Thread(target=self.animate_lineEdit_name).start()
-            elif not log:
+                threading.Thread(target=self.line_edit_error).start()
+            elif not movement:
                 threading.Thread(target=self.animate_lineEdit_log).start()
 
-    def read_scene_file(self, name):
+    @staticmethod
+    def read_file(name):  # reading scene file data
+        """
+        The function is used to read data from a file with a recorded scene
+        :param name:
+        :return:
+        """
         if os.path.exists(f'{name}.rec'):
-            returned_list = []
-            with open(f'{name}.rec') as inf:
-                for line in inf:
-                    returned_list.append(line.strip())
-            return returned_list
+            returned = list()
+            with open(f'{name}.rec', 'r') as inf:
+                for item in inf:
+                    returned.append(item.strip())
+            return returned
         return False
 
+###################################################################################################################
+    # list view functions
+###################################################################################################################
 
-    def listView_load_items(self):
-        model = QtGui.QStandardItemModel()
-        self.ui.listView.setModel(model)
+    def view_load_items(self):
+        """
+        Function to view the list of loaded items
+        :return:
+        """
+        mdl = QtGui.QStandardItemModel()
+        self.ui.list_view.setModel(mdl)
         for item in os.listdir():
-            ras = os.path.splitext(item)[1]
-            if ras == '.rec':
+            rc = os.path.splitext(item)[1]
+            if rc == '.rec':
                 item = QtGui.QStandardItem(item)
                 item.setEditable(False)
-                model.appendRow(item)
+                mdl.appendRow(item)
 
-    def on_select_item(self, index):
-        self.selected_item = index
-        self.ui.nameLabel_2.setText(index.data())
-        self.ui.weightLabel_2.setText(f'{toFixed(os.path.getsize(index.data())/1024,2)} Кб')
-        date = str(ctime(os.path.getctime(index.data())))
-        self.ui.dateLabel.setText(date[date.find(' ')+1:date.rfind(' ')])
-        self.ui.timeLabel_2.setText(f'{toFixed(self.scene_time(index.data()[:index.data().find(".")], from_file=True), 3)} мс')
+    def selected_item(self, index):
+        """
+        The function is used to display information about the recorded scene: duration, recording time, scene weight,
+        its name.
+        :param index:
+        :return:
+        """
+        self.on_selected_item = index
+        self.ui.second_name.setText(index.data())
+        self.ui.second_weight.setText(f'{to_fixed_value(os.path.getsize(index.data()) / 1024, 2)} Кб')
+        dt = str(ctime(os.path.getctime(index.data())))
+        self.ui.second_time.setText(f'{to_fixed_value(self.time(index.data()[:index.data().find(".")], from_file=True), 3)} с')
+        self.ui.date.setText(dt[dt.find(' ') + 1:dt.rfind(' ')])
 
-    def delete_item(self):
-        os.remove(self.selected_item.data())
-        model = QtGui.QStandardItemModel()
-        self.ui.listView.setModel(model)
-        model.removeRow(self.selected_item.row())
-        self.listView_load_items()
+    def delete(self):  # Function for delete item from list
+        os.remove(self.on_selected_item.data())
+        mdl = QtGui.QStandardItemModel()
+        self.ui.list_view.setModel(mdl)
+        mdl.removeRow(self.on_selected_item.row())
+        self.view_load_items()
 
     def on_select_button(self):
-        if self.selected_item:
-            self.ui.nameLabel.setText(self.selected_item.data())
-            self.ui.weightLabel.setText(f'{toFixed(os.path.getsize(self.selected_item.data()) / 1024, 2)} Кб')
-            self.ui.timeLabel.setText(f'{toFixed(self.scene_time(self.selected_item.data()[:self.selected_item.data().find(".")], from_file=True), 3)} с')
-            self.listener.set_log(self.read_scene_file(self.selected_item.data()[:self.selected_item.data().find('.')]))
+        """
+        The function is used to display information about the recorded scene when you click on the "Select" button:
+        duration, recording time, scene weight, its name.
+        :return:
+        """
+        if self.on_selected_item:
+            self.ui.file_name.setText(self.on_selected_item.data())
+            self.ui.file_weight.setText(f'{to_fixed_value(os.path.getsize(self.on_selected_item.data()) / 1024, 2)} Кб')
+            self.ui.file_runtime.setText(f'{to_fixed_value(self.time(self.on_selected_item.data()[:self.on_selected_item.data().find(".")], from_file=True), 3)} с')
+            self.subscriber.set_log(self.read_file(self.on_selected_item.data()[:self.on_selected_item.data().find('.')]))
 
-    def animate_lineEdit_log(self):
-        self.ui.lineEdit.setText('')
-        text = self.ui.lineEdit.placeholderText()
-        self.ui.lineEdit.setPlaceholderText("Вы не записали сценарий")
-        sleep(5)
-        self.ui.lineEdit.setPlaceholderText(text)
-
-    def animate_lineEdit_name(self):
-        text = self.ui.lineEdit.placeholderText()
+    def line_edit_error(self):
+        """
+        Fires when the "Add" button is clicked, if the user has not entered a name for the file.
+        :return:
+        """
+        txt = self.ui.lineEdit.placeholderText()
         self.ui.lineEdit.setPlaceholderText('Вы не указали название')
         sleep(5)
-        self.ui.lineEdit.setPlaceholderText(text)
+        self.ui.lineEdit.setPlaceholderText(txt)
 
-    def load_items(self):
+    def load_items(self):  # Function for load items
         self.ui.lineEdit.setPlaceholderText('Название сценария')
-        check_folder_of_data()
-        self.load_hotkey_button_values()
+        check()
+        self.load_values()
         self.load_images()
-        self.listView_load_items()
+        self.view_load_items()
 
-    def load_signals(self):
-        self.ui.saveButton.clicked.connect(self.save_hotkeys)
-        self.ui.startRecordButton.clicked.connect(self.scene_start)
-        self.ui.playButton.clicked.connect(self.scene_play)
-        self.ui.addButton.clicked.connect(self.save_scene_to_file)
-        self.ui.listView.clicked.connect(self.on_select_item)
-        self.ui.deleteButton.clicked.connect(self.delete_item)
-        self.ui.selectButton.clicked.connect(self.on_select_button)
-        self.ui.githubLink.clicked.connect(lambda: webbrowser.open('https://github.com/neiroun'))
-        self.ui.mouseButton.clicked.connect(lambda: self.specButton_onclick(0))
-        self.ui.keyboardButton.clicked.connect(lambda: self.specButton_onclick(1))
-        self.ui.repeatButton.clicked.connect(lambda: self.specButton_onclick(2))
+    def load_signals(self):  # Function for load signals
+        self.ui.button_to_save.clicked.connect(self.save)
+        self.ui.button_for_start_record.clicked.connect(self.start)
+        self.ui.button_for_play.clicked.connect(self.play)
+        self.ui.add_button.clicked.connect(self.save_to_file)
+        self.ui.list_view.clicked.connect(self.selected_item)
+        self.ui.button_for_delete.clicked.connect(self.delete)
+        self.ui.button_for_select.clicked.connect(self.selected_item)
+        self.ui.link_on_my_github.clicked.connect(lambda: webbrowser.open('https://github.com/neiroun'))
+        self.ui.button_for_mouse.clicked.connect(lambda: self.spec_button_onclick(0))
+        self.ui.button_for_keyboard.clicked.connect(lambda: self.spec_button_onclick(1))
+        self.ui.button_for_repeeat.clicked.connect(lambda: self.spec_button_onclick(2))
 
-    def specButton_onclick(self, index):
-        self.spec_values[index] = not self.spec_values[index]
-        if self.spec_values[index]:
+    def spec_button_onclick(self, index):  # Function for spec buttons ON/OFF
+        self.values_for_spec[index] = not self.values_for_spec[index]
+        if self.values_for_spec[index]:
             self.sender().setText('ВКЛ')
         else:
             self.sender().setText('ВЫКЛ')
 
-    def button_click_handler(self):
+    def button_click_handler(self):  # Function for button click handling
         button = self.sender()
-        if button in self.button_list[:3]:
-            self.hotkey_onkey_click(button)
+        if button in self.buttons[:3]:
+            self.click(button)
         else:
-            threading.Thread(target=self.button_animation_thread, args=(button,)).start()
+            threading.Thread(target=self.button_animation, args=(button,)).start()
 
-    def button_animation_thread(self, button):
+    @staticmethod
+    def button_animation(button):
         button.setStyleSheet('background-color: #E0E0E0;')
         sleep(0.1)
         button.setStyleSheet('')
 
-    def load_play_button(self):
+    def load_play_button(self):  # load play button
         try:
             os.chdir('../img')
-            icon = ''
-            if self.scene_playing:
+            if self.playing_scene:
                 icon = QtGui.QIcon('stop_red.png')
             else:
                 icon = QtGui.QIcon('start_red.png')
             os.chdir('../data')
+
         except:
             pass
         else:
-            self.ui.playButton.setIcon(icon)
+            self.ui.button_for_play.setIcon(icon)
 
-
-    def load_record_button(self):
+    def record_button_load(self):  # load record button
         try:
             os.chdir('../img')
-            icon = ''
-            if self.scene_recording:
+            if self.recording_scene:
                 icon = QtGui.QIcon('stop_blue.png')
             else:
                 icon = QtGui.QIcon('start_blue.png')
@@ -321,25 +444,25 @@ class Main(QMainWindow):
         except:
             pass
         else:
-            self.ui.startRecordButton.setIcon(icon)
+            self.ui.button_for_start_record.setIcon(icon)
 
-    def load_other_images(self):
+    def load_other_images(self):  # Function to upload GitHub icon
         try:
-            os.chdir('../img')
+            os.chdir('../img')  # change directory to img folder
             github_pixmap = QtGui.QPixmap('github.png')
-            youtube_pixmap = QtGui.QPixmap('youtube.png')
-            os.chdir('../data')
+            os.chdir('../data')  # change directory back to data
         except:
             pass
         else:
-            self.ui.youtubeIcon.setPixmap(youtube_pixmap)
             self.ui.githubIcon.setPixmap(github_pixmap)
 
-
-    def load_images(self):
+    def load_images(self):  # load all img
+        """
+        Function to upload pictures to play record buttons and so on
+        """
         self.load_play_button()
         self.load_other_images()
-        self.load_record_button()
+        self.record_button_load()
 
 
 if __name__ == '__main__':

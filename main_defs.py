@@ -3,56 +3,58 @@
 from main_import import *
 
 
-def toFixed(numberObj, digits=0):
+def to_fixed_value(numberObj, digits=0):  # values to fixed
     return f"{numberObj:.{digits}f}"
 
 
-def check_folder_of_data():
+def check():  # Function for check data
     if not os.path.exists('data'):
         os.mkdir('data')
     os.chdir('data')
 
-def clear_values_of_button():
+
+def clear_values():
     global standart_hotkey_list
     with open('buttons.dt', 'w') as ouf:
-        text = ''
-        for hotkey in standart_hotkey_list:
-            text += f'{hotkey}\n'
-        ouf.write(text[:-1])
+        txt = ''
+        for item in standart_hotkey_list:
+            txt += f'{item}\n'
+        ouf.write(txt[:-1])
 
-def read_values_of_button():
+
+def read_button_value():
     global standart_hotkey_list
     if os.path.exists('buttons.dt'):
-        lines, correct_list = [], []
-        with open('buttons.dt') as inf:
-            for line in inf:
-                lines.append(line)
+        lines, correct = list(), list()
+        with open('buttons.dt') as file:
+            for item in file:
+                lines.append(item)
         if len(lines) < 3:
-            clear_values_of_button()
+            clear_values()
             return standart_hotkey_list
-        for x in range(len(lines)):
+        for item in range(len(lines)):
             try:
-                a = add_hotkey(lines[x].strip(), lambda: 2)
+                add = add_hotkey(lines[item].strip(), lambda: 2)
             except:
-                correct_list.append(standart_hotkey_list[x])
+                correct.append(standart_hotkey_list[item])
             else:
-                correct_list.append(lines[x])
-                remove_hotkey(a)
-        save_values_of_buttons(correct_list)
-        return list(map(str.strip, correct_list))
+                correct.append(lines[item])
+                remove_hotkey(add)
+        save_button_value(correct)
+        return list(map(str.strip, correct))
     else:
-        clear_values_of_button()
+        clear_values()
         return list(map(str.strip, standart_hotkey_list))
 
 
-def save_values_of_buttons(values):
+def save_button_value(values):
     if os.path.exists('buttons.dt'):
-        text = ''
+        txt = ''
         for item in values:
-            text += f'{item.strip()}\n'
+            txt += f'{item.strip()}\n'
         with open('buttons.dt', 'w') as ouf:
-            ouf.write(text[:-1])
+            ouf.write(txt[:-1])
     else:
-        clear_values_of_button()
-        save_values_of_buttons(values)
+        clear_values()
+        save_button_value(values)
 

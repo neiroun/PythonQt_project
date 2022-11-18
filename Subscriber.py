@@ -4,52 +4,52 @@
 from main_import import *
 
 
-class Subscriber:
+class Subscriber:  # Write class
     def __init__(self):
         self.logg, self.StartTime = [], 0
-        self.mouseListener = mouse.Listener(on_move=self.OnMove, on_click=self.onclick, on_scroll=self.OnScroll)
-        self.keyListener = ''
-        self.IsStarted = False
+        self.mouse_subscriber = mouse.Listener(on_move=self.on_move, on_click=self.on_click, on_scroll=self.on_scroll)
+        self.key_subscriber = ''
+        self.is_start = False
         self.mouseOn, self.keyboardOn = True, True
 
-    def run(self, mouseOn, keyboardOn):
-        if not self.IsStarted:
+    def run(self, mouseOn, keyboardOn):  # run process
+        if not self.is_start:
             self.mouseOn, self.keyboardOn = mouseOn, keyboardOn
             self.clear_log()
             self.StartTime = time()
             if self.mouseOn:
-                self.mouseListener.start()
+                self.mouse_subscriber.start()
             if self.keyboardOn:
-                self.keyListener = hook(self.WriteKeyboard)
-            self.IsStarted = True
+                self.key_subscriber = hook(self.keyboard_write)
+            self.is_start = True
 
-    def set_log(self, new_log):
+    def set_log(self, new_log):  # set log
         self.logg = new_log
 
-    def stop(self):
-        if self.IsStarted:
+    def stop(self):  # stop process
+        if self.is_start:
             if self.mouseOn:
-                self.mouseListener.stop()
-                self.mouseListener = mouse.Listener(on_move=self.OnMove, on_click=self.onclick, on_scroll=self.OnScroll)
+                self.mouse_subscriber.stop()
+                self.mouse_subscriber = mouse.Listener(on_move=self.on_move, on_click=self.on_click, on_scroll=self.on_scroll)
             if self.keyboardOn:
-                unhook(self.keyListener)
-            self.IsStarted = False
-            self.keyListener = ''
+                unhook(self.key_subscriber)
+            self.is_start = False
+            self.key_subscriber = ''
 
-    def get_log(self):
+    def get_log(self):  # get logg
         return self.logg
 
-    def clear_log(self):
-        self.logg = []
+    def clear_log(self):  # clear log
+        self.logg = list()
 
-    def WriteKeyboard(self, a):
+    def keyboard_write(self, a):  # Function for write keyboard
         self.logg.append(f'{time() - self.StartTime} keyboard {str(a)[str(a).find("(") + 1:str(a).find(")")]}')
 
-    def OnMove(self, x, y):
+    def on_move(self, x, y):
         self.logg.append(f'{time() - self.StartTime} mouseOnMove {x} {y}')
 
-    def onclick(self, x, y, button, pressed):
+    def on_click(self, x, y, button, pressed):
         self.logg.append(f'{time() - self.StartTime} mouseOnClick {x} {y} {button} {pressed}')
 
-    def OnScroll(self, x, y, dx, dy):
+    def on_scroll(self, x, y, dx, dy):
         self.logg.append(f'{time() - self.StartTime} mouseOnScroll {x} {y} {dx} {dy}')

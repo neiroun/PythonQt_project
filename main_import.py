@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from form import Ui_MainWindow
+from form import MainForm
 import sys
 from time import sleep, time, ctime
 from pynput import mouse
